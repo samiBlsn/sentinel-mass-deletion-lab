@@ -1,0 +1,11 @@
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where OperationNameValue =~ "MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/DELETE"
+| where ActivityStatusValue =~ "Success"
+| summarize
+    DeletionCount = count(),
+    FirstDeletion = min(TimeGenerated),
+    LastDeletion = max(TimeGenerated),
+    DeletedResourceGroups = make_set(ResourceGroup, 100)
+    by Caller, CallerIpAddress
+| order by DeletionCount desc

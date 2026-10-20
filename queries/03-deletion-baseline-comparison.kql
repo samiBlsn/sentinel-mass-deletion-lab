@@ -1,0 +1,42 @@
+let CurrentWindow = 1h;
+let BaselineWindow = 7d;
+
+let CurrentActivity =
+    AzureActivity
+    | where TimeGenerated > ago(CurrentWindow)
+    | where OperationNameValue =~ "MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/DELETE"
+    | where ActivityStatusValue =~ "Success"
+    | summarize
+        CurrentDeletionCount = count(),
+        CurrentResourceGroups = make_set(ResourceGroup, 100)
+        by Caller;
+
+let HistoricalActivity =
+    AzureActivity
+    | where TimeGenerated between (ago(BaselineWindow) .. ago(CurrentWindow))
+    | where OperationNameValue =~ "MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/DELETE"
+    | where ActivityStatusValue =~ "Success"
+    | summarize
+        HistoricalDeletionCount = count(),
+        HistoricalActiveDays = dcount(startofday(TimeGenerated))
+        by Caller;
+
+CurrentActivity
+| join kind=leftouter HistoricalActivity on Caller
+| extend
+    HistoricalDeletionCount = coalesce(HistoricalDeletionCount, 0),
+    HistoricalActiveDays = coalesce(HistoricalActiveDays, 0)
+| extend ActivityAssessment = case(
+    HistoricalDeletionCount == 0,
+    "Aucune suppression observée dans l'historique",
+    CurrentDeletionCount > HistoricalDeletionCount,
+    "Volume actuel supérieur à l'historique total",
+    "Activité déjà observée historiquement"
+)
+| project
+    Caller,
+    CurrentDeletionCount,
+    HistoricalDeletionCount,
+    HistoricalActiveDays,
+    CurrentResourceGroups,
+    ActivityAssessment

@@ -1,0 +1,12 @@
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where OperationNameValue =~ "MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/DELETE"
+| where ActivityStatusValue in~ ("Start", "Accept", "Success")
+| project
+    TimeGenerated,
+    Caller,
+    CallerIpAddress,
+    ResourceGroup,
+    ActivityStatusValue,
+    CorrelationId
+| order by TimeGenerated asc
