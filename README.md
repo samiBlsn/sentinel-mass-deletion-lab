@@ -463,7 +463,7 @@ Ce projet a été réalisé à la suite de l'obtention de la certification :
 
 **Microsoft Certified: Security Operations Analyst Associate — SC-200**
 
-L'objectif est de consolider les connaissances acquises pendant la préparation de la certification et de démontrer leur mise en pratique dans un scénario de sécurité Azure de bout en bout.
+L'objectif est de démontrer les connaissances acquises pendant la préparation de la certification et de démontrer leur mise en pratique dans un scénario de sécurité Azure de bout en bout.
 
 Le laboratoire ne cherche pas à reproduire un environnement SOC de production complet, mais à illustrer de manière concrète les différentes étapes d'un workflow de détection et de réponse :
 
