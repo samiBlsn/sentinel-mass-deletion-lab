@@ -1,0 +1,25 @@
+# Secrets et paramètres locaux
+*.env
+.env
+*.secret
+*.secrets
+*.key
+*.pem
+*.pfx
+
+# Azure / Terraform éventuel
+.azure/
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Fichiers temporaires
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Paramètres pouvant contenir des identifiants
+*parameters.local.json
+*credentials*
+*connection*.json
