@@ -2,33 +2,39 @@
 
 ## Présentation
 
-Ce projet est un laboratoire de **detection engineering** réalisé avec Microsoft Sentinel après l'obtention de la certification **Microsoft SC-200 — Security Operations Analyst Associate**.
+Ce projet est un laboratoire de **Detection Engineering / SOC** réalisé avec Microsoft Sentinel après l'obtention de la certification :
 
-L'objectif est de simuler une activité de suppression inhabituelle de ressources Azure, de détecter ce comportement avec KQL, de générer un incident dans Microsoft Sentinel et d'automatiser une partie de son traitement avec une Automation Rule et un playbook Azure Logic Apps.
+**Microsoft Certified: Security Operations Analyst Associate — SC-200**
+
+L'objectif est de simuler une **suppression massive de groupes de ressources Azure**, d'analyser les événements générés avec KQL, de créer une règle analytique Microsoft Sentinel, de générer un incident, de l'investiguer puis d'automatiser une partie de son traitement avec une Automation Rule et un playbook Azure Logic Apps.
 
 Le laboratoire couvre une chaîne SOC complète :
 
 ```text
 Simulation Azure
-      ↓
+        ↓
 Azure Activity Log
-      ↓
+        ↓
 Log Analytics
-      ↓
+        ↓
 Microsoft Sentinel
-      ↓
-Détection KQL
-      ↓
+        ↓
+Threat Hunting KQL
+        ↓
 Analytics Rule
-      ↓
-Incident
-      ↓
+        ↓
+Incident High
+        ↓
+Investigation
+        ↓
 Automation Rule
-      ↓
+        ↓
 Logic Apps Playbook
-      ↓
+        ↓
 Enrichissement automatique
 ```
+
+---
 
 ## Objectifs
 
@@ -38,67 +44,88 @@ Ce laboratoire permet de mettre en pratique :
 - le développement de requêtes KQL ;
 - le threat hunting ;
 - la création d'une règle analytique Microsoft Sentinel ;
+- l'utilisation des Entity Mappings et Custom Details ;
 - le mapping avec MITRE ATT&CK ;
 - la génération et l'investigation d'incidents ;
 - l'automatisation avec Azure Logic Apps ;
-- l'utilisation des identités managées et du RBAC Azure ;
+- l'utilisation d'Azure CLI ;
 - la documentation d'un scénario de détection de bout en bout.
+
+---
 
 ## Scénario
 
 Le scénario simule la création puis la suppression rapide de plusieurs groupes de ressources Azure dédiés au laboratoire.
 
-Les groupes de ressources utilisent exclusivement le préfixe :
+Les groupes utilisent exclusivement le préfixe :
 
 ```text
 sc200-massdel-lab-
 ```
 
-Aucune ressource de production n'est utilisée ou supprimée.
+Six groupes de ressources sont créés :
 
-L'activité générée est ensuite analysée dans Microsoft Sentinel via la table :
-
-```kusto
-AzureActivity
+```text
+sc200-massdel-lab-1
+sc200-massdel-lab-2
+sc200-massdel-lab-3
+sc200-massdel-lab-4
+sc200-massdel-lab-5
+sc200-massdel-lab-6
 ```
 
-Le comportement recherché est une série de suppressions de groupes de ressources effectuées sur une courte période.
+Ils sont ensuite supprimés rapidement via Azure CLI.
+
+Aucune ressource de production n'est utilisée ou supprimée.
+
+---
 
 ## MITRE ATT&CK
 
-Le comportement simulé est associé à la technique suivante :
+Le comportement simulé est associé à :
 
-**T1485 — Data Destruction**
+```text
+Tactic    : Impact
+Technique : T1485 — Data Destruction
+```
 
-Le mapping MITRE ATT&CK est utilisé ici afin d'illustrer le processus de développement et de documentation d'une règle de détection dans Microsoft Sentinel.
+Le mapping MITRE ATT&CK est utilisé afin d'intégrer la détection dans une logique SOC structurée.
+
+---
 
 ## Architecture
 
 ```text
 Azure CLI
-   ↓
+        ↓
 Création de groupes de ressources de test
-   ↓
-Suppression rapide des groupes de ressources
-   ↓
+        ↓
+Suppression rapide
+        ↓
+Azure Resource Manager
+        ↓
 Azure Activity Log
-   ↓
+        ↓
 Log Analytics Workspace
-   ↓
+        ↓
 Microsoft Sentinel
-   ↓
-Requêtes KQL de hunting
-   ↓
-Analytics Rule
-   ↓
+        ↓
+Threat Hunting KQL
+        ↓
+Scheduled Analytics Rule
+        ↓
 Alerte / Incident
-   ↓
+        ↓
+Investigation
+        ↓
 Automation Rule
-   ↓
+        ↓
 Azure Logic Apps Playbook
-   ↓
-Tag / commentaire automatique
+        ↓
+Ajout automatique d'un commentaire
 ```
+
+---
 
 ## Technologies utilisées
 
@@ -107,24 +134,25 @@ Tag / commentaire automatique
 - Azure Activity Log
 - Azure Log Analytics
 - Kusto Query Language — KQL
-- Azure Logic Apps
 - Microsoft Sentinel Analytics Rules
 - Microsoft Sentinel Automation Rules
+- Azure Logic Apps
 - Azure CLI
 - Microsoft Entra ID
-- Managed Identities
-- Azure RBAC
 - MITRE ATT&CK
+- Git / GitHub
+
+---
 
 ## Structure du dépôt
 
 ```text
 sentinel-mass-deletion-lab/
+│
 ├── README.md
 ├── .gitignore
 │
 ├── docs/
-│   ├── 00-architecture.md
 │   ├── 01-simulation.md
 │   ├── 02-threat-hunting.md
 │   ├── 03-regle-detection.md
@@ -133,69 +161,69 @@ sentinel-mass-deletion-lab/
 │   └── 06-cleanup-couts.md
 │
 ├── queries/
-│   ├── deletions-by-user.kql
-│   ├── deletion-timeline.kql
-│   └── mass-deletion-detection.kql
+│   ├── 01-deletions-by-identity.kql
+│   ├── 02-deletion-timeline.kql
+│   └── 03-deletion-baseline-comparison.kql
 │
 ├── rules/
-│   └── mass-deletion-rule.yaml
-│
-├── playbook/
-│   └── README.md
+│   └── mass-deletion-rule.json
 │
 ├── scripts/
 │   ├── simulate-mass-deletion.sh
 │   └── cleanup.sh
 │
 └── screenshots/
+    ├── 01-azureactivity-operation-summary.png
+    ├── 02-hunting-deletions-by-identity.png
+    ├── 03-hunting-baseline-comparison.png
+    ├── 04-analytics-rule-configuration.png
+    ├── 05-incident-mass-deletion.png
+    ├── 06-incident-entities-details.png
+    ├── 07-automation-rule-playbook.png
+    └── 08-playbook-automated-comment.png
 ```
 
-## Déroulement du laboratoire
+---
 
-Le laboratoire est organisé en plusieurs étapes :
+# 1. Simulation
 
-1. création de groupes de ressources Azure dédiés au test ;
-2. suppression contrôlée de ces groupes de ressources ;
-3. analyse des événements générés dans `AzureActivity` ;
-4. création de requêtes KQL de threat hunting ;
-5. développement d'une règle analytique Microsoft Sentinel ;
-6. génération d'une alerte et d'un incident ;
-7. automatisation du triage avec une Automation Rule et Azure Logic Apps ;
-8. investigation de l'incident ;
-9. classification de l'activité ;
-10. nettoyage des ressources Azure.
-
-## Simulation
-
-La simulation crée plusieurs groupes de ressources Azure vides spécifiquement destinés au laboratoire.
-
-Tous les groupes utilisent le préfixe :
-
-```text
-sc200-massdel-lab-
-```
-
-Ils sont ensuite supprimés rapidement via Azure CLI afin de générer plusieurs événements de management plane dans Azure Activity Log.
-
-Le script de simulation est disponible dans :
+Le script :
 
 ```text
 scripts/simulate-mass-deletion.sh
 ```
 
-Cette convention de nommage permet d'éviter toute confusion avec des ressources Azure existantes.
+crée six groupes de ressources Azure vides dédiés au laboratoire.
 
-Aucune ressource autre que celles créées spécifiquement pour ce laboratoire ne doit être supprimée.
+Une confirmation manuelle est demandée avant la suppression.
 
-## Source de données
+Le script ne cible que les groupes utilisant le préfixe :
 
-Les opérations Azure générées pendant le scénario sont collectées dans la table :
+```text
+sc200-massdel-lab
+```
+
+Cette convention limite le risque de supprimer accidentellement d'autres ressources Azure.
+
+Les groupes sont ensuite supprimés rapidement afin de générer une activité inhabituelle dans Azure Activity Log.
+
+Documentation détaillée :
+
+```text
+docs/01-simulation.md
+```
+
+---
+
+# 2. Source de données
+
+Les événements générés sont collectés dans la table :
 
 ```kusto
 AzureActivity
 ```
 
-Les principaux champs étudiés sont notamment :
+Les principaux champs utilisés sont :
 
 ```text
 TimeGenerated
@@ -208,238 +236,484 @@ ResourceId
 CorrelationId
 ```
 
-Ces données permettent d'identifier :
-
-- l'utilisateur à l'origine de l'opération ;
-- la ressource ciblée ;
-- le type d'opération exécutée ;
-- le statut de l'opération ;
-- la fréquence des suppressions ;
-- la période pendant laquelle les opérations ont été réalisées.
-
-## Threat Hunting
-
-Plusieurs requêtes KQL sont utilisées afin d'investiguer l'activité générée.
-
-Les objectifs du hunting sont notamment :
-
-- identifier les suppressions de ressources ;
-- déterminer quel utilisateur a réalisé les opérations ;
-- reconstruire la chronologie de l'activité ;
-- compter le nombre de suppressions réalisées sur une courte période ;
-- différencier une suppression isolée d'un comportement potentiellement anormal.
-
-Les requêtes sont stockées dans :
+Les opérations observées pendant le laboratoire sont notamment :
 
 ```text
-queries/
+MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/WRITE
+MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/DELETE
 ```
 
-## Détection
-
-Une Analytics Rule Microsoft Sentinel est développée afin d'identifier plusieurs suppressions de ressources Azure effectuées dans une courte fenêtre temporelle.
-
-La logique générale de détection est la suivante :
+Une suppression peut générer plusieurs états :
 
 ```text
+Start
+Accept
+Success
+```
+
+Pour éviter le double comptage dans la détection, seules les opérations :
+
+```kusto
+ActivityStatusValue =~ "Success"
+```
+
+sont utilisées pour le comptage.
+
+---
+
+# 3. Threat Hunting
+
+Trois requêtes KQL sont utilisées pour analyser l'activité.
+
+## Suppressions par identité
+
+```text
+queries/01-deletions-by-identity.kql
+```
+
+Cette requête permet d'identifier :
+
+- l'identité à l'origine des suppressions ;
+- l'adresse IP source ;
+- le nombre de suppressions ;
+- les groupes concernés ;
+- la première et la dernière suppression observées.
+
+Résultat :
+
+```text
+DeletionCount = 6
+```
+
+---
+
+## Reconstruction de la timeline
+
+```text
+queries/02-deletion-timeline.kql
+```
+
+Cette requête conserve les états :
+
+```text
+Start
+Accept
+Success
+```
+
+afin de reconstruire la chronologie complète des opérations.
+
+Le champ :
+
+```text
+CorrelationId
+```
+
+permet de relier les différents événements appartenant à une même opération Azure.
+
+---
+
+## Comparaison avec l'historique
+
+```text
+queries/03-deletion-baseline-comparison.kql
+```
+
+La requête compare l'activité récente avec les suppressions historiquement observées pour la même identité.
+
+Résultat du laboratoire :
+
+```text
+CurrentDeletionCount    = 6
+HistoricalDeletionCount = 0
+HistoricalActiveDays    = 0
+```
+
+Évaluation :
+
+```text
+Aucune suppression observée dans l'historique
+```
+
+Documentation détaillée :
+
+```text
+docs/02-threat-hunting.md
+```
+
+---
+
+# 4. Règle analytique Microsoft Sentinel
+
+Une Scheduled Analytics Rule a été créée :
+
+```text
+Mass Azure Resource Group Deletion
+```
+
+Sévérité :
+
+```text
+High
+```
+
+MITRE ATT&CK :
+
+```text
+Impact
+T1485 — Data Destruction
+```
+
+La logique principale est :
+
+```kusto
 AzureActivity
-      ↓
-Filtrage des opérations de suppression
-      ↓
-Regroupement par utilisateur
-      ↓
-Comptage des suppressions
-      ↓
-Application d'un seuil
-      ↓
-Génération d'une alerte
+| where OperationNameValue =~ "MICROSOFT.RESOURCES/SUBSCRIPTIONS/RESOURCEGROUPS/DELETE"
+| where ActivityStatusValue =~ "Success"
+| summarize
+    DeletedResourceGroupCount = dcount(ResourceGroup),
+    DeletedResourceGroups = make_set(ResourceGroup, 100),
+    FirstDeletion = min(TimeGenerated),
+    LastDeletion = max(TimeGenerated),
+    CallerIpAddress = take_any(CallerIpAddress)
+    by Caller
+| where DeletedResourceGroupCount >= 5
 ```
 
-La règle est documentée et exportée dans :
+La règle recherche donc :
 
 ```text
-rules/
+au moins 5 groupes de ressources distincts supprimés par la même identité
 ```
 
-Elle inclut notamment :
+---
 
-- un nom explicite ;
-- une description ;
-- une sévérité ;
-- une fréquence d'exécution ;
-- une période d'analyse ;
-- une requête KQL ;
-- un mapping d'entités ;
-- un mapping MITRE ATT&CK.
+## Planification
 
-## Automatisation
-
-Lorsqu'un incident correspondant au scénario est créé, une Automation Rule Microsoft Sentinel déclenche automatiquement un playbook Azure Logic Apps.
-
-Le workflow attendu est :
+Configuration utilisée pendant le laboratoire :
 
 ```text
-Incident Sentinel créé
-        ↓
-Automation Rule
-        ↓
-Logic Apps Playbook
-        ↓
-Ajout d'un commentaire
-        ↓
-Ajout d'un tag
-        ↓
-Incident enrichi automatiquement
+Run query every : 5 minutes
+Lookup data from the last : 5 heures
 ```
 
-L'objectif n'est pas de fermer automatiquement l'incident, mais d'illustrer une automatisation de triage de niveau SOC.
+Cette fenêtre volontairement large permettait d'inclure les événements déjà générés pendant le scénario.
 
-Le playbook utilise une identité managée afin d'interagir avec Microsoft Sentinel.
+Dans un environnement de production, elle pourrait être réduite selon le besoin opérationnel.
 
-## Investigation
+---
 
-Une fois l'incident généré, l'investigation consiste à :
+## Entity Mapping
 
-1. examiner la règle ayant généré l'alerte ;
-2. identifier l'utilisateur concerné ;
-3. vérifier les groupes de ressources supprimés ;
-4. reconstruire la timeline des opérations ;
-5. examiner l'adresse IP et les informations disponibles sur l'appelant ;
-6. valider le nombre de suppressions ;
-7. vérifier l'exécution du playbook ;
+### Account
+
+```text
+Entity type : Account
+Identifier  : FullName
+Column      : Caller
+```
+
+### IP
+
+```text
+Entity type : IP
+Identifier  : Address
+Column      : CallerIpAddress
+```
+
+---
+
+## Custom Details
+
+Deux détails sont ajoutés à l'alerte :
+
+```text
+DeletedRGCount
+→ DeletedResourceGroupCount
+```
+
+```text
+DeletedRGs
+→ DeletedResourceGroups
+```
+
+Ils permettent à l'analyste de voir immédiatement :
+
+- le nombre de groupes supprimés ;
+- la liste des groupes concernés.
+
+---
+
+## Export
+
+La règle déployée a été exportée directement depuis Microsoft Sentinel.
+
+Le fichier est disponible ici :
+
+```text
+rules/mass-deletion-rule.json
+```
+
+Documentation détaillée :
+
+```text
+docs/03-regle-detection.md
+```
+
+---
+
+# 5. Incident généré
+
+La simulation a généré :
+
+```text
+6 suppressions réussies
+```
+
+La règle analytique a ensuite généré :
+
+```text
+1 alerte High
+        ↓
+1 incident Microsoft Sentinel
+```
+
+L'incident expose notamment :
+
+```text
+Account
+IP Address
+DeletedRGCount = 6
+DeletedRGs
+```
+
+Les six groupes supprimés sont visibles directement dans les Custom Details.
+
+---
+
+# 6. Investigation SOC
+
+L'investigation consiste à :
+
+1. identifier le compte ayant effectué les suppressions ;
+2. vérifier l'adresse IP source ;
+3. valider le nombre de suppressions réussies ;
+4. reconstruire la timeline ;
+5. analyser les `CorrelationId` ;
+6. comparer l'activité avec l'historique ;
+7. examiner le contexte ;
 8. classifier l'incident.
 
-Dans le cadre du laboratoire, l'activité doit finalement être classifiée comme :
+Les éléments observés sont :
+
+```text
+6 suppressions réussies
+        ↓
+même identité
+        ↓
+fenêtre temporelle très courte
+        ↓
+activité inhabituelle
+        ↓
+aucune suppression observée dans l'historique disponible
+```
+
+Dans le contexte du laboratoire, les suppressions ont été volontairement générées par le script de simulation.
+
+La classification finale est donc :
 
 ```text
 Benign Positive / Security Testing
 ```
 
-La classification permet de démontrer le cycle complet :
+La détection est correcte, mais l'activité est autorisée dans le contexte du laboratoire.
+
+Documentation détaillée :
 
 ```text
-Detection
-    ↓
-Alert
-    ↓
+docs/05-investigation.md
+```
+
+---
+
+# 7. Automatisation SOAR
+
+Une Automation Rule a été configurée :
+
+```text
+ar-mass-deletion-triage
+```
+
+Déclencheur :
+
+```text
+When incident is created
+```
+
+Condition :
+
+```text
+Analytic rule name
+Contains
+Mass Azure Resource Group Deletion
+```
+
+Action :
+
+```text
+Run Logic App playbook
+```
+
+Playbook utilisé :
+
+```text
+PB-SC200-Incident
+```
+
+Le playbook ajoute automatiquement un commentaire dans l'activité de l'incident.
+
+Exemple observé :
+
+```text
+[SC-200 LAB] Traitement automatique déclenché par PB-SC200-Incident :
+Mass Azure Resource Group Deletion
+```
+
+La chaîne devient donc :
+
+```text
 Incident
-    ↓
-Investigation
-    ↓
-Automation
-    ↓
-Classification
+        ↓
+Automation Rule
+        ↓
+PB-SC200-Incident
+        ↓
+Ajout automatique d'un commentaire
+        ↓
+Incident enrichi
 ```
 
-## Résultats attendus
-
-À la fin du laboratoire, Microsoft Sentinel doit permettre de :
-
-- visualiser les opérations de suppression dans `AzureActivity` ;
-- identifier l'utilisateur ayant réalisé les suppressions ;
-- détecter plusieurs suppressions effectuées sur une courte période ;
-- générer automatiquement une alerte ;
-- créer un incident Microsoft Sentinel ;
-- enrichir l'incident avec les entités pertinentes ;
-- déclencher automatiquement un playbook ;
-- ajouter un tag ou un commentaire à l'incident ;
-- investiguer l'activité avec KQL ;
-- classifier correctement l'incident.
-
-## Captures d'écran
-
-Les captures publiées dans le dépôt servent uniquement à démontrer les différentes étapes du laboratoire.
-
-Les captures prévues incluent notamment :
-
-- événements de suppression visibles dans `AzureActivity` ;
-- requête KQL de hunting ;
-- résultats de la détection ;
-- configuration de l'Analytics Rule ;
-- incident Microsoft Sentinel ;
-- entités associées à l'incident ;
-- Automation Rule ;
-- Logic Apps Playbook ;
-- exécution réussie du playbook ;
-- commentaire ou tag ajouté automatiquement.
-
-Les captures sont stockées dans :
+Documentation détaillée :
 
 ```text
-screenshots/
+docs/04-automatisation.md
 ```
 
-## Sécurité
+---
 
-Ce projet est réalisé dans un environnement Azure de laboratoire.
+# 8. Résultats obtenus
 
-Avant publication, les informations sensibles doivent être supprimées ou masquées, notamment :
+Le laboratoire a permis de valider :
 
-- Subscription ID ;
-- Tenant ID ;
-- adresses e-mail personnelles ;
-- adresses IP publiques ;
-- identifiants de connexions Logic Apps ;
-- URL contenant des identifiants internes ;
-- tokens ;
-- secrets ;
-- clés d'API ;
-- informations d'authentification.
+- la génération contrôlée de télémétrie Azure ;
+- l'ingestion des événements dans `AzureActivity` ;
+- le threat hunting avec KQL ;
+- l'identification de suppressions multiples ;
+- la reconstruction d'une timeline ;
+- la comparaison avec une baseline historique ;
+- la création d'une Analytics Rule ;
+- l'association MITRE ATT&CK `T1485` ;
+- l'utilisation des Entity Mappings ;
+- l'utilisation des Custom Details ;
+- la génération d'un incident High ;
+- l'investigation de l'activité ;
+- la classification en `Benign Positive` ;
+- l'association d'une Automation Rule ;
+- l'enrichissement automatique de l'incident avec un playbook.
 
-Aucun secret ou identifiant sensible ne doit être stocké dans le dépôt GitHub.
+---
 
-## Coût
+# 9. Captures
 
-Le laboratoire est conçu pour limiter les coûts Azure.
+## Azure Activity
 
-Les groupes de ressources utilisés pour la simulation sont vides et temporaires.
+![Azure Activity operations](screenshots/01-azureactivity-operation-summary.png)
 
-Les principaux services utilisés sont :
+## Threat Hunting
 
-- Microsoft Sentinel ;
-- Log Analytics ;
-- Azure Activity Log ;
-- Azure Logic Apps.
+![Deletion hunting](screenshots/02-hunting-deletions-by-identity.png)
 
-Une attention particulière est portée à :
+![Baseline comparison](screenshots/03-hunting-baseline-comparison.png)
 
-- la surveillance des coûts Azure ;
-- la limitation du volume de données généré ;
-- la suppression des ressources temporaires ;
-- le nettoyage des Logic Apps et règles créées pour le laboratoire ;
-- l'annulation de l'abonnement de test lorsque le projet est terminé.
+## Règle analytique
 
-## Nettoyage
+![Analytics rule](screenshots/04-analytics-rule-configuration.png)
 
-À la fin du laboratoire, les ressources créées spécifiquement pour le projet sont supprimées.
+## Incident
 
-Le processus de nettoyage comprend notamment :
+![Generated incident](screenshots/05-incident-mass-deletion.png)
 
-```text
-Vérification des résultats
-        ↓
-Export des configurations utiles
-        ↓
-Sauvegarde des captures d'écran
-        ↓
-Commit GitHub
-        ↓
-Suppression des ressources temporaires
-        ↓
-Vérification de Cost Management
-        ↓
-Annulation de l'abonnement de test
-```
+![Incident entities and custom details](screenshots/06-incident-entities-details.png)
 
-Un script de nettoyage peut être conservé dans :
+## Automatisation
+
+![Automation rule](screenshots/07-automation-rule-playbook.png)
+
+![Automated playbook comment](screenshots/08-playbook-automated-comment.png)
+
+---
+
+# 10. Nettoyage et coûts
+
+Un script de nettoyage est disponible :
 
 ```text
 scripts/cleanup.sh
 ```
 
-## Compétences mises en pratique
+Il recherche uniquement les groupes dont le nom commence par :
 
-Ce laboratoire permet de démontrer des compétences en :
+```text
+sc200-massdel-lab
+```
+
+avant de demander une confirmation manuelle.
+
+Cette approche permet de limiter le risque de suppression accidentelle.
+
+Le laboratoire a également été conçu pour limiter les coûts :
+
+- groupes de ressources vides ;
+- faible volume de logs ;
+- simulation ponctuelle ;
+- réutilisation d'un workspace existant ;
+- requêtes KQL ciblées ;
+- suppression ou désactivation des ressources inutiles après les tests.
+
+Documentation détaillée :
+
+```text
+docs/06-cleanup-couts.md
+```
+
+---
+
+# 11. Sécurité
+
+Avant publication du dépôt, les informations sensibles doivent être supprimées ou masquées.
+
+Notamment :
+
+```text
+Tenant ID
+Subscription ID
+email personnel
+adresse IP publique
+credentials
+tokens
+secrets
+connection strings
+```
+
+Les captures du dépôt sont anonymisées lorsque nécessaire.
+
+Aucun secret ne doit être stocké dans GitHub.
+
+---
+
+# 12. Compétences mises en pratique
+
+Ce laboratoire démontre des compétences en :
 
 - Security Operations ;
 - Microsoft Sentinel ;
@@ -451,39 +725,48 @@ Ce laboratoire permet de démontrer des compétences en :
 - Incident Response ;
 - Azure Security ;
 - Azure Activity Log ;
+- Analytics Rules ;
+- Entity Mapping ;
+- Custom Details ;
 - Logic Apps ;
-- Managed Identities ;
-- Azure RBAC ;
+- Azure CLI ;
 - MITRE ATT&CK ;
-- automatisation de la réponse à incident.
+- Git / GitHub ;
+- documentation technique.
 
-## Contexte
+---
 
-Ce projet a été réalisé à la suite de l'obtention de la certification :
+# Conclusion
 
-**Microsoft Certified: Security Operations Analyst Associate — SC-200**
-
-L'objectif est de démontrer les connaissances acquises pendant la préparation de la certification et de démontrer leur mise en pratique dans un scénario de sécurité Azure de bout en bout.
-
-Le laboratoire ne cherche pas à reproduire un environnement SOC de production complet, mais à illustrer de manière concrète les différentes étapes d'un workflow de détection et de réponse :
+Ce projet démontre la construction d'un scénario Microsoft Sentinel de bout en bout :
 
 ```text
 Collecte
-   ↓
-Analyse
-   ↓
+    ↓
+Threat Hunting
+    ↓
 Détection
-   ↓
+    ↓
 Alerte
-   ↓
+    ↓
 Incident
-   ↓
+    ↓
 Investigation
-   ↓
-Automatisation
-   ↓
+    ↓
 Classification
+    ↓
+Automatisation
 ```
+
+L'objectif n'était pas uniquement de créer une requête KQL, mais de reproduire un workflow SOC cohérent autour d'un comportement potentiellement destructif dans Azure.
+
+Le laboratoire complète la certification :
+
+**Microsoft Certified: Security Operations Analyst Associate — SC-200**
+
+en mettant en pratique les concepts Sentinel, KQL, investigation, MITRE ATT&CK et SOAR dans un environnement Azure réel.
+
+---
 
 ## Avertissement
 
